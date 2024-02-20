@@ -4,7 +4,7 @@ class Bank():
         self.name= name
         
     def owner(self):
-        self.name = input("Введите имя")
+        self.name = input("Введите имя: ")
         
     def balance(self):
         print(self.money)
@@ -14,7 +14,7 @@ class Bank():
         self.money+=plus
         
     def withdraw (self):
-        minus = int(input("Введите сумму"))
+        minus = int(input("Введите сумму: "))
         if self.money<minus:
             print("У вас недостаточно средств")
         else:
