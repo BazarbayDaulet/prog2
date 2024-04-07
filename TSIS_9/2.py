@@ -1,6 +1,6 @@
 import pygame
 import random
-
+import time
 
 pygame.init()
 
@@ -12,7 +12,6 @@ GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Snake Game')
-
 
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
@@ -75,18 +74,28 @@ class Snake:
 class Food:
     def __init__(self):
         self.position = (0, 0)
-        self.color = RED
+        self.timer = 0
+        self.weighted_foods = [(RED, random.randint(1, 5))]  # Colors for different weighted foods
         self.randomize_position()
 
     def randomize_position(self):
         self.position = (random.randint(0, GRID_WIDTH - 1) * GRID_SIZE, random.randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
+        self.timer = time.time() + random.randint(3, 6)  # Randomize timer for food disappearance
 
     def draw(self, surface):
-        r = pygame.Rect((self.position[0], self.position[1]), (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(surface, self.color, r)
-        pygame.draw.rect(surface, WHITE, r, 1)
+        # Check if food should disappear
+        if time.time() >= self.timer:
+            self.randomize_position()
+        else:
+            choice = random.choices(self.weighted_foods, [w[1] for w in self.weighted_foods])[0]
+            color, _ = choice
+            r = pygame.Rect((self.position[0], self.position[1]), (GRID_SIZE, GRID_SIZE))
+            pygame.draw.rect(surface, color, r)
+            pygame.draw.rect(surface, WHITE, r, 1)
 
+            return self.position
 
+# Main function
 def main():
     snake = Snake()
     food = Food()
@@ -98,18 +107,13 @@ def main():
         screen.fill((0, 0, 0))
         snake.handle_keys()
         snake.move()
+
+        food_position = food.draw(screen)
         
         # Check for collision with food
-        if snake.get_head_position() == food.position:
-            snake.length += 1
+        if snake.get_head_position() == food_position:
+            snake.length += random.randint(1, 3)
             score += 1
-            food.randomize_position()
-
-            # Increase level after certain score
-            if score % 4 == 0:
-                level += 4
-                snake.color = random.choice([GREEN, (0,255,255), (255,255,0)]) # Change snake color
-                clock.tick(8 + level) # Increase speed
 
         # Check for border collision
         if (snake.get_head_position()[0] < 0 or snake.get_head_position()[0] >= SCREEN_WIDTH or
@@ -117,11 +121,9 @@ def main():
             snake.reset()
             score = 0
             level = 1
-            snake.color = GREEN 
             clock.tick(8)
 
         snake.draw(screen)
-        food.draw(screen)
         pygame.display.update()
         clock.tick(8 + level)
 
